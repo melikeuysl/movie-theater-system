@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=BBH+Sans+Bogle&family=Caveat:wght@400..700&family=Outfit:wght@100..900&display=swap');
+@import "tailwindcss";
+
+@theme{
+  --color-primary: #4D55CC;
+  --color-primary-dull:#7A73D1;
+}
+
+*{
+  font-family: "Outfit", sans-serif;
+  scrollbar-width: thin;
+  scrollbar-color: #211C84 #B5A8D5;
+}
+
+body{
+  color: white;
+  background-color: #211C84;
+}
