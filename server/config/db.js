@@ -1,14 +1,12 @@
 import mongoose from "mongoose";
 
-export const connectDB = async () => {
+const connectDB = async () => {
   try {
-    console.log("MONGO_URI from env:", process.env.MONGO_URI);
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log("✅ MongoDB connected");
+    mongoose.connection.on('connected', () => console.log('Database connected'));
+    await mongoose.connect(`${process.env.MONGODB_URI}/cinemate`)
   } catch (error) {
-    console.error("❌ MongoDB connection error:");
-    console.error("Name:", error.name);
-    console.error("Message:", error.message);
-    process.exit(1);
+    console.log(error.message);
   }
-};
+}
+
+export default connectDB;
