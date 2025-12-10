@@ -1,42 +1,56 @@
-import React, { useEffect, useState } from 'react'
-import { dummyShowsData } from '../../assets/assets'
-import Loading from '../../components/Loading'
-import Title from '../../components/admin/Title'
-import { dateFormat } from '../../lib/dateFormat'
+import React, { useEffect, useState } from "react";
+import Loading from "../../components/Loading";
+import Title from "../../components/admin/Title";
+import { dateFormat } from "../../lib/dateFormat";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const ListShows = () => {
+  const currency = import.meta.env.VITE_CURRENCY || "₺";
 
-    const currency = import.meta.env.VITE_CURRENCY
+  const [shows, setShows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    const [shows, setShows] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const getAllShows = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-    const getAllShows = async () =>{
-      try {
-        setShows([{
-          movie: dummyShowsData[0],
-          showDateTime: "2025-06-30T02:30:00.000Z",
-          showPrice: 59,
-          occupiedSeats: {
-            A1: "user_1",
-            B1: "user_2",
-            C1: "user_3",
-          }
-        }]);
-        setLoading(false);
+      const res = await fetch(`${API_BASE_URL}/api/shows`);
+      if (!res.ok) {
+        throw new Error("Failed to fetch shows");
+      }
+
+      const data = await res.json();
+      setShows(data);
     } catch (error) {
-        console.error(error);
+      console.error("Error fetching shows:", error);
+      setError(error.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
     }
-  } 
+  };
 
   useEffect(() => {
     getAllShows();
   }, []);
 
-  return !loading ? (
+  if (loading) return <Loading />;
+
+  if (error) {
+    return (
+      <div className="text-center text-red-400 mt-10">
+        <h2 className="text-xl font-medium">{error}</h2>
+      </div>
+    );
+  }
+
+  return (
     <>
       <Title text1="List" text2="Shows" />
-      <div className="max-w-4x1 mt-6 overflow-x-auto">
+      <div className="max-w-4xl mt-6 overflow-x-auto">
         <table className="w-full border-collapse rounded-md overflow-hidden text-nowrap">
           <thead>
             <tr className="bg-primary/20 text-left text-white">
@@ -46,20 +60,31 @@ const ListShows = () => {
               <th className="p-2 font-medium">Earnings</th>
             </tr>
           </thead>
+
           <tbody className="text-sm font-light">
-            {shows.map((show, index) => (
-              <tr key={index} className="border-b border-primary/10 bg-primary/5 even:bg-primary/10">
-                <td className="p-2 min-w-45 pl-5">{show.movie.title}</td>
-                <td className="p-2">{dateFormat(show.showDateTime)}</td>
-                <td className="p-2">{Object.keys(show.occupiedSeats).length}</td>
-                <td className="p-2">{currency} {Object.keys(show.occupiedSeats).length * show.showPrice}</td>
-              </tr>
-            ))}
+            {shows.map((show) => {
+              const seatCount = Object.keys(show.occupiedSeats || {}).length;
+              const earnings = seatCount * show.showPrice;
+
+              return (
+                <tr
+                  key={show._id}
+                  className="border-b border-primary/10 bg-primary/5 even:bg-primary/10"
+                >
+                  <td className="p-2 min-w-45 pl-5">{show.movie?.title}</td>
+                  <td className="p-2">{dateFormat(show.showDateTime)}</td>
+                  <td className="p-2">{seatCount}</td>
+                  <td className="p-2">
+                    {currency} {earnings}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
     </>
-  ) : <Loading />
-}
+  );
+};
 
-export default ListShows
+export default ListShows;
