@@ -45,4 +45,35 @@ export const getShowById = async (req, res) => {
   }
 };
 
+export const createShows = async (req, res) => {
+  try {
+    const { movieId, showPrice, dateTimes, hallName } = req.body;
 
+    if (!movieId || !showPrice || !dateTimes || !Array.isArray(dateTimes) || dateTimes.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "movieId, showPrice and dateTimes are required" });
+    }
+
+    const movie = await Movie.findById(movieId);
+    if (!movie) {
+      return res.status(404).json({ message: "Movie not found" });
+    }
+
+    const docsToCreate = dateTimes.map((dt) => ({
+      movie: movieId,
+      hallName: hallName || "Hall 1",
+      showDateTime: new Date(dt),
+      showPrice,
+      occupiedSeats: {},
+      isActive: true,
+    }));
+
+    const createdShows = await Show.insertMany(docsToCreate);
+
+    return res.status(201).json(createdShows);
+  } catch (error) {
+    console.error("Error creating shows:", error);
+    return res.status(500).json({ message: "Server error while creating shows" });
+  }
+};
