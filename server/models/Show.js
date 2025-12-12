@@ -35,4 +35,10 @@ const showSchema = new Schema(
   { timestamps: true }
 );
 
+showSchema.index(
+  { movie: 1, showDateTime: 1, hallName: 1 },
+  { unique: true }
+);
+
+
 export default mongoose.model("Show", showSchema);

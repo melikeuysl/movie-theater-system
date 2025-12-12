@@ -3,6 +3,8 @@ import Loading from "../../components/Loading";
 import Title from "../../components/admin/Title";
 import { CheckIcon, DeleteIcon, StarIcon } from "lucide-react";
 import { kConverter } from "../../lib/kConverter";
+import toast from "react-hot-toast";
+
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
@@ -18,7 +20,6 @@ function AddShows() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const fetchNowPlayingMovies = async () => {
     try {
@@ -47,10 +48,12 @@ function AddShows() {
 
     setDateTimeSelection((prev) => {
       const times = prev[date] || [];
-      if (!times.includes(time)) {
-        return { ...prev, [date]: [...times, time] };
+
+      if (times.includes(time)) {
+        toast("Already added");
+        return prev;
       }
-      return prev;
+      return { ...prev, [date]: [...times, time] };
     });
 
     setDateTimeInput("");
@@ -76,8 +79,8 @@ function AddShows() {
 
     entries.forEach(([date, times]) => {
       times.forEach((time) => {
-        const iso = new Date(`${date}T${time}`).toISOString();
-        result.push(iso);
+        const localDateTime = `${date}T${time}`;
+        result.push(localDateTime);
       });
     });
 
@@ -87,7 +90,6 @@ function AddShows() {
   const handleAddShow = async () => {
     try {
       setError("");
-      setSuccess("");
 
       if (!selectedMovie) {
         setError("Please select a movie.");
@@ -127,14 +129,16 @@ function AddShows() {
       const created = await res.json();
       console.log("Created shows:", created);
 
-      setSuccess("Shows created successfully!");
-      
+      toast.success("Shows created successfully!");
+
       setSelectedMovie(null);
       setShowPrice("");
       setDateTimeSelection({});
+      setDateTimeInput("");
+
     } catch (err) {
       console.error("Error creating shows:", err);
-      setError(err.message || "Something went wrong while creating shows.");
+      toast.error(err.message || "Something went wrong while creating shows.");
     } finally {
       setSubmitting(false);
     }
@@ -162,11 +166,6 @@ function AddShows() {
       {error && (
         <p className="mt-4 text-sm text-red-400 bg-red-900/30 px-3 py-2 rounded">
           {error}
-        </p>
-      )}
-      {success && (
-        <p className="mt-4 text-sm text-emerald-400 bg-emerald-900/30 px-3 py-2 rounded">
-          {success}
         </p>
       )}
 
@@ -206,7 +205,9 @@ function AddShows() {
                 </div>
               )}
               <p className="font-medium truncate">{movie.title}</p>
-              <p className="text-gray-400 text-sm">{movie.release_date}</p>
+              <p className="text-gray-400 text-sm"> 
+                {movie.release_date ? new Date(movie.release_date).getFullYear() : "-"}
+              </p>
             </div>
           ))}
         </div>
@@ -240,7 +241,7 @@ function AddShows() {
             onChange={(e) => setDateTimeInput(e.target.value)}
             className="outline-none rounded-md bg-transparent"
           />
-          <button
+          <button type="button"
             onClick={handleDateTimeAdd}
             className="bg-primary/80 text-white px-3 py-2 text-sm rounded-lg hover:bg-primary cursor-pointer"
           >
@@ -279,6 +280,7 @@ function AddShows() {
       )}
 
       <button
+        type="button"
         disabled={submitting}
         onClick={handleAddShow}
         className="bg-primary text-white px-8 py-2 mt-6 rounded hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"

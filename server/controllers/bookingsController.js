@@ -22,9 +22,7 @@ export const getBookings = async (req, res) => {
     res.json(bookings);
   } catch (error) {
     console.error("Error fetching bookings:", error);
-    res
-      .status(500)
-      .json({ message: "Server error while fetching bookings" });
+    res.status(500).json({ message: "Server error while fetching bookings" });
   }
 };
 
@@ -32,10 +30,10 @@ export const createBooking = async (req, res) => {
   try {
     const { userId, showId, seats, amount } = req.body;
 
-    if (!userId || !showId || !seats || !seats.length || !amount) {
-      return res
-        .status(400)
-        .json({ message: "userId, showId, seats and amount are required" });
+    if (!userId || !showId || !Array.isArray(seats) || seats.length === 0 || !amount) {
+      return res.status(400).json({
+        message: "userId, showId, seats and amount are required",
+      });
     }
 
     const show = await Show.findById(showId);
@@ -43,8 +41,11 @@ export const createBooking = async (req, res) => {
       return res.status(404).json({ message: "Show not found" });
     }
 
-    const occupied = show.occupiedSeats || {};
-    const alreadyTaken = seats.filter((s) => occupied[s]);
+    const occupied = show.occupiedSeats;
+
+    const alreadyTaken = seats.filter(seat =>
+      occupied.has(seat)
+    );
 
     if (alreadyTaken.length > 0) {
       return res.status(400).json({
@@ -52,9 +53,10 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    seats.forEach((seat) => {
-      occupied[seat] = userId;
+    seats.forEach(seat => {
+      occupied.set(seat, userId);
     });
+
     show.occupiedSeats = occupied;
     await show.save();
 
@@ -66,16 +68,16 @@ export const createBooking = async (req, res) => {
       isPaid: false,
     });
 
-    const populated = await booking.populate({
+    const populatedBooking = await booking.populate({
       path: "show",
       populate: { path: "movie" },
     });
 
-    res.status(201).json(populated);
+    return res.status(201).json(populatedBooking);
   } catch (error) {
     console.error("Error creating booking:", error);
-    res
-      .status(500)
-      .json({ message: "Server error while creating booking" });
+    return res.status(500).json({
+      message: "Server error while creating booking",
+    });
   }
 };

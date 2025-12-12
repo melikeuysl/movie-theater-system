@@ -57,7 +57,13 @@ export const createShows = async (req, res) => {
   try {
     const { movieId, showPrice, dateTimes, hallName } = req.body;
 
-    if (!movieId || !showPrice || !dateTimes || !Array.isArray(dateTimes) || dateTimes.length === 0) {
+    if (
+      !movieId ||
+      showPrice === undefined ||
+      showPrice === null ||
+      !Array.isArray(dateTimes) ||
+      dateTimes.length === 0
+    ) {
       return res
         .status(400)
         .json({ message: "movieId, showPrice and dateTimes are required" });
@@ -77,9 +83,30 @@ export const createShows = async (req, res) => {
       isActive: true,
     }));
 
-    const createdShows = await Show.insertMany(docsToCreate);
+    let createdShows = [];
+    let skippedCount = 0;
 
-    return res.status(201).json(createdShows);
+    try {
+     createdShows = await Show.insertMany(docsToCreate, { ordered: false });
+    } catch (err) {
+      if (err.code !== 11000) throw err;
+
+      const existing = await Show.find({
+        movie: movieId,
+        hallName: hallName || "Hall 1",
+        showDateTime: { $in: docsToCreate.map((d) => d.showDateTime) },
+      });
+
+      skippedCount = Math.max(0, docsToCreate.length - existing.length);
+      createdShows = existing;
+    }
+
+    return res.status(201).json({
+      message: "Shows created",
+      createdCount: createdShows.length,
+      skippedCount,
+      shows: createdShows,
+    });
   } catch (error) {
     console.error("Error creating shows:", error);
     return res.status(500).json({ message: "Server error while creating shows" });
