@@ -1,29 +1,53 @@
-import React from 'react'
-import { dummyShowsData } from '../assets/assets'
-import MovieCard from '../components/MovieCard'
-import BlurCircle from '../components/BlurCircle'
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import Loading from "../components/Loading";
+import MovieCard from "../components/MovieCard";
+import { useUser } from "@clerk/clerk-react";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const Favorite = () => {
-  return dummyShowsData.length > 0 ? (
-    <div className='relative my-40 mb-60 px-6 md:px-16 lg:px-40 xl:px-44
-    overflow-hidden min-h-[80vh]'>
-      <BlurCircle top="150px " left="0px"/>
-      <BlurCircle bottom="50px " right="50px"/>
-      <h1 className='text-lg font-medium my-4'>Your Favorite Movies</h1>
-      <div className='flex flex-wrap max-sm:justify-center gap-8 '>
-        {dummyShowsData.map((movie)=>(<MovieCard movie={movie} key={movie._id}/>))}
-      </div>
+  const { user } = useUser();
+  const userId = user?.id || "user_demo";
 
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  const fetchFavorites = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/api/favorites?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch favorites");
+      const data = await res.json();
+      setItems(data); // [{_id, userId, movie: {...}}]
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    fetchFavorites();
+  }, [userId]);
+
+  if (loading) return <Loading />;
+
+  return (
+    <div className="pt-28 px-6 md:px-16 lg:px-36">
+      <h1 className="text-2xl font-semibold">Favorites</h1>
+
+      {items.length === 0 ? (
+        <p className="text-gray-400 mt-3">No favorites yet.</p>
+      ) : (
+        <div className="mt-6 flex flex-wrap gap-4">
+          {items.map((f) => (
+            <MovieCard key={f._id} movie={f.movie} />
+          ))}
+        </div>
+      )}
     </div>
-  ) : (
-    <div className=' flex flex-col items-center justify-center h-screen'>
-      <h2 className='text 3xl font-bold text-center'>No movies available.</h2>
+  );
+};
 
-
-    </div>
-  )
-}
-
-export default Favorite
+export default Favorite;
