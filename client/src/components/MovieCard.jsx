@@ -55,7 +55,7 @@ const MovieCard = ({ movie }) => {
 
   return (
     <div
-      className="relative flex flex-col justify-between p-3 bg-gray-800 rounded-2xl hover:-traslate-y-1 transition duration-300 w-66"
+      className="relative flex flex-col justify-between p-3 bg-gray-800 rounded-2xl hover:-translate-y-1 transition duration-300 w-full"
       onClick={() => {
         navigate(`/movies/${movie._id}`);
         scrollTo(0, 0);
@@ -70,11 +70,14 @@ const MovieCard = ({ movie }) => {
         <Heart className={`w-5 h-5 ${isFav ? "fill-primary text-primary" : "text-white"}`} />
       </button>
 
-      <img
-        src={movie.backdrop_path}
-        alt=""
-        className="rounded-lg h-52 w-full object-cover object-right-bottom cursor-pointer"
-      />
+      <div className="w-full aspect-[2/3] rounded-lg bg-black/20 overflow-hidden">
+        <img
+          src={movie.poster_path || movie.backdrop_path}
+          alt={movie.title}
+          className="w-full h-full object-contain"
+          loading="lazy"
+        />
+      </div>
 
       <p className="font-semibold mt-2 truncate">{movie.title}</p>
 
