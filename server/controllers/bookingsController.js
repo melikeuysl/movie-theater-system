@@ -1,80 +1,81 @@
-import Booking from '../models/Booking.js';
-import Show from '../models/Show.js';
+import Booking from "../models/Booking.js";
+import Show from "../models/Show.js";
 
 export const getBookings = async (req, res) => {
   try {
-    const { userId, showId } = req.query;
+    const { userId } = req.query;
     const filter = {};
 
-    if (userId) filter.user = userId;
-    if (showId) filter.show = showId;
+    if (userId) {
+      filter.user = userId;
+    }
 
     const bookings = await Booking.find(filter)
+      .sort({ createdAt: -1 })
       .populate({
-        path: 'show',
-        populate: { path: 'movie', select: 'title poster_path' },
-      })
-      .sort({ createdAt: -1 });
+        path: "show",
+        populate: {
+          path: "movie",
+        },
+      });
 
-    return res.status(200).json(bookings);
+    res.json(bookings);
   } catch (error) {
-    console.error('Error fetching bookings:', error);
-    return res
+    console.error("Error fetching bookings:", error);
+    res
       .status(500)
-      .json({ message: 'Server error while fetching bookings' });
+      .json({ message: "Server error while fetching bookings" });
   }
 };
 
 export const createBooking = async (req, res) => {
   try {
-    const { user, showId, seats, amount } = req.body;
+    const { userId, showId, seats, amount } = req.body;
 
-    if (!user || !showId || !Array.isArray(seats) || seats.length === 0 || !amount) {
-      return res.status(400).json({ message: 'Missing required fields' });
+    if (!userId || !showId || !seats || !seats.length || !amount) {
+      return res
+        .status(400)
+        .json({ message: "userId, showId, seats and amount are required" });
     }
 
     const show = await Show.findById(showId);
     if (!show) {
-      return res.status(404).json({ message: 'Show not found' });
-    }
-    if (show.isActive === false) {
-      return res.status(400).json({ message: 'Show is not active' });
+      return res.status(404).json({ message: "Show not found" });
     }
 
     const occupied = show.occupiedSeats || {};
+    const alreadyTaken = seats.filter((s) => occupied[s]);
 
-    const alreadyTaken = seats.filter((seat) => occupied[seat]);
     if (alreadyTaken.length > 0) {
-      return res.status(409).json({
-        message: 'Some seats are already booked',
-        seats: alreadyTaken,
+      return res.status(400).json({
+        message: `Seats already booked: ${alreadyTaken.join(", ")}`,
       });
     }
 
     seats.forEach((seat) => {
-      occupied[seat] = true;
+      occupied[seat] = userId;
     });
     show.occupiedSeats = occupied;
     await show.save();
 
     const booking = await Booking.create({
-      user,
+      user: userId,
       show: showId,
-      amount,
       bookedSeats: seats,
-      isPaid: true, 
+      amount,
+      isPaid: false,
     });
 
-    const populatedBooking = await booking.populate({
-      path: 'show',
-      populate: { path: 'movie', select: 'title poster_path' },
+    const populated = await booking.populate({
+      path: "show",
+      populate: { path: "movie" },
     });
 
-    return res.status(201).json(populatedBooking);
+    res.status(201).json(populated);
   } catch (error) {
-    console.error('Error creating booking:', error);
-    return res
+    console.error("Error creating booking:", error);
+    res
       .status(500)
-      .json({ message: 'Server error while creating booking' });
+      .json({ message: "Server error while creating booking" });
   }
 };

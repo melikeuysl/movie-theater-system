@@ -3,7 +3,7 @@ import { getMovies, getMovieById } from "../controllers/movieController.js";
 
 const router = express.Router();
 
-router.get("/", getMovies);       // GET /api/movies
-router.get("/:id", getMovieById); // GET /api/movies/:id
+router.get("/", getMovies);       
+router.get("/:id", getMovieById); 
 
 export default router;

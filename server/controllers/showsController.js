@@ -3,23 +3,31 @@ import Movie from '../models/Movie.js';
 
 export const getShows = async (req, res) => {
   try {
-    const { movieId } = req.query;
+    const { movieId, date } = req.query;
 
     const query = {};
     if (movieId) {
       query.movie = movieId;
     }
 
+    if (date) {
+      const start = new Date(date);
+      const end = new Date(date);
+      end.setDate(end.getDate() + 1);
+
+      query.showDateTime = { $gte: start, $lt: end };
+    }
+
     const shows = await Show.find(query)
-      .populate('movie', 'title poster_path backdrop_path genres runtime')
+      .populate("movie") 
       .sort({ showDateTime: 1 });
 
-    return res.status(200).json(shows);
+    res.json(shows);
   } catch (error) {
-    console.error('Error fetching shows:', error);
-    return res
+    console.error("Error fetching shows:", error);
+    res
       .status(500)
-      .json({ message: 'Server error while fetching shows' });
+      .json({ message: "Server error while fetching shows" });
   }
 };
 
