@@ -25,7 +25,7 @@ const DateSelect = ({dateTime, id}) => {
             <BlurCircle top="-100" left="-100px" />
             <BlurCircle top="100" right="0px" />
             <div>
-                <p className='text-lg fonbt-semibold'>Choose Date</p>
+                <p className='text-lg font-semibold'>Choose Date</p>
                 <div className='flex items-center gap-6 text-sm mt-5'>
                     <ChevronLeftIcon width={28} />
                     <span className='grid grid-cols-3 md:flex flex-wrap md:max-w-lg
