@@ -5,10 +5,10 @@ const { Schema } = mongoose;
 const bookingSchema = new Schema(
   {
     user: {
-      type: String, 
-      ref: "User",
+      type: String,
       required: true,
     },
+
     show: {
       type: Schema.Types.ObjectId,
       ref: "Show",
