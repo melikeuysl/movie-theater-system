@@ -6,13 +6,15 @@ import Loading from "../components/Loading";
 import { ArrowRightIcon, ClockIcon } from "lucide-react";
 import isoTimeFormat from "../lib/isoTimeFormat";
 import toast from "react-hot-toast";
+import { useUser } from "@clerk/clerk-react";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
-const DEMO_USER_ID = "user_demo";
 
 const SeatLayout = () => {
+  const { user } = useUser();
+
   const groupRows = [["A", "B"], ["C", "D"], ["E", "F"], ["G", "H"], ["I", "J"]];
 
   const { id: movieId, date } = useParams();
@@ -103,10 +105,16 @@ const SeatLayout = () => {
     </div>
   );
 
+ 
   const handleProceedToCheckout = async () => {
+    if (!user) {
+    return toast("Please login to book seats.");
+    }
+
     if (!selectedShow) {
       return toast("Please select a time.");
     }
+    
     if (selectedSeats.length === 0) {
       return toast("Please select at least one seat.");
     }
@@ -120,11 +128,12 @@ const SeatLayout = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: DEMO_USER_ID,         
-          showId: selectedShow._id,
-          seats: selectedSeats,
-          amount,
+        userId: user.id,
+        showId: selectedShow._id,
+        seats: selectedSeats,
+        amount,
         }),
+
       });
 
       if (!res.ok) {

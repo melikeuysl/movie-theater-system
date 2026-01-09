@@ -3,14 +3,18 @@ import Loading from "../components/Loading";
 import BlurCircle from "../components/BlurCircle";
 import timeFormat from "../lib/timeFormat";
 import { dateFormat } from "../lib/dateFormat";
+import { useUser } from "@clerk/clerk-react";
+
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
-const DEMO_USER_ID = "user_demo";
 
 const MyBookings = () => {
   const currency = import.meta.env.VITE_CURRENCY || "$";
+
+  const { user } = useUser();
+
 
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,7 +26,8 @@ const MyBookings = () => {
       setError("");
 
       const res = await fetch(
-        `${API_BASE_URL}/api/bookings?userId=${DEMO_USER_ID}`
+        `${API_BASE_URL}/api/bookings?userId=${user.id}`
+
       );
       if (!res.ok) {
         throw new Error("Failed to fetch bookings");
@@ -39,8 +44,11 @@ const MyBookings = () => {
   };
 
   useEffect(() => {
+  if (user) {
     getMyBookings();
-  }, []);
+  }
+}, [user]);
+
 
   if (isLoading) return <Loading />;
 
