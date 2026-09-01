@@ -6,13 +6,6 @@ It simulates a real-world online movie ticket booking platform where users can b
 
 The project follows an Agile development lifecycle with sprint planning, user stories, and incremental delivery.
 
-👥 Project Team
-
-* Melisa Suvari
-
-* Melike Uysal
-
-* Zehra Saygın
 
 🎯 Project Objectives
 
